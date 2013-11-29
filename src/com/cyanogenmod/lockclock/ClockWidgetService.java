@@ -164,8 +164,30 @@ public class ClockWidgetService extends IntentService {
 
                 if (weatherInfo != null) {
                     setWeatherData(remoteViews, smallWidget, weatherInfo);
+
+                    // AQI info
+                    String aqiInfo = weatherInfo.getAqiInfo();
+                    if (TextUtils.isEmpty(aqiInfo)) {
+                        remoteViews.setViewVisibility(R.id.aqi_info_panel, View.GONE);
+                    } else {
+                        int aqiInfoTextColor = Preferences.weatherFontColor(this);
+                        int aqiInfoTextBg = 0;
+
+                        int[] aqiInfoColors = weatherInfo.getAqiLevelColors();
+                        if (aqiInfoColors != null && aqiInfoColors.length == 2) {
+                            aqiInfoTextColor = aqiInfoColors[0];
+                            aqiInfoTextBg = aqiInfoColors[1];
+                        }
+
+                        remoteViews.setTextViewText(R.id.aqi_info, aqiInfo);
+                        remoteViews.setTextColor(R.id.aqi_info, aqiInfoTextColor);
+                        remoteViews.setInt(R.id.aqi_info, "setBackgroundColor", aqiInfoTextBg);
+                        remoteViews.setViewVisibility(R.id.aqi_info_panel, View.VISIBLE);
+                    }
                 } else {
                     setNoWeatherData(remoteViews, smallWidget);
+                    // AQI info
+                    remoteViews.setViewVisibility(R.id.aqi_info_panel, View.GONE);
                 }
             }
             remoteViews.setViewVisibility(R.id.weather_panel, (showWeather && canFitWeather) ? View.VISIBLE : View.GONE);
