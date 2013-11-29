@@ -165,13 +165,16 @@ public class WeatherUpdateService extends Service {
             }
 
             if (customLocationId != null) {
-                return provider.getWeatherInfo(customLocationId, customLocationName);
+                WeatherInfo info =  provider.getWeatherInfo(customLocationId, customLocationName);
+                addAqiInfo(info);
+                return info;
             }
 
             Location location = getCurrentLocation();
             if (location != null) {
                 WeatherInfo info = provider.getWeatherInfo(location);
                 if (info != null) {
+                    addAqiInfo(info);
                     return info;
                 }
             }
@@ -320,5 +323,45 @@ public class WeatherUpdateService extends Service {
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         am.cancel(getUpdateIntent(context, true));
         am.cancel(getUpdateIntent(context, false));
+    }
+
+    private static final String[] SUPPORTED_AQI_LOCATIONS = new String[] {"shanghai", "beijing", "chengdu", "guangzhou"};
+    private static final String[] TWITTER_SCREEN_NAMES = new String[] {"CGShanghaiAir", "BeijingAir", "CGChengduAir", "Guangzhou_Air"};
+    private static final String TWITTER_PROXY_URL = "http://kurtchen.com/lab/aqi/?user=";
+    private void addAqiInfo(WeatherInfo info) {
+        if (info == null) {
+            Log.e(TAG, "addAqiInfo() -  info is null, skipping");
+            return;
+        }
+
+        String cityName = info.getCity();
+        if (TextUtils.isEmpty(cityName)) {
+            Log.e(TAG, "addAqiInfo() - empty city:" + cityName);
+            return;
+        }
+
+        String twitter = null;
+        for (int i = 0; i < SUPPORTED_AQI_LOCATIONS.length; i++) {
+            if (SUPPORTED_AQI_LOCATIONS[i].equalsIgnoreCase(cityName)) {
+                twitter = TWITTER_SCREEN_NAMES[i];
+                break;
+            }
+        }
+
+        if (twitter == null) {
+            Log.w(TAG, cityName + " is not supported currently");
+            return;
+        }
+
+        String aqiInfo = HttpRetriever.retrieve(TWITTER_PROXY_URL + twitter);
+        if (D) Log.d(TAG, "addAqiInfo() - aqiInfo=" + aqiInfo);
+
+        String aqiInfoText = WeatherInfo.parseAqiInfo(aqiInfo);
+        if (TextUtils.isEmpty(aqiInfoText)) {
+            // get from cache
+            WeatherInfo cachedInfo = Preferences.getCachedWeatherInfo(this);
+            aqiInfoText = cachedInfo.getAqiInfo();
+        }
+        info.setAqiInfo(aqiInfoText);
     }
 }

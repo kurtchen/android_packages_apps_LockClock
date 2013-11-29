@@ -21,4 +21,13 @@
     <color name="text_shadow">#dd000000</color>
     <color name="text_shadow_opaque">#3f000000</color>
 
+    <color name="aqi_level_good">#ff00e400</color>
+    <color name="aqi_level_moderate">#ffffff00</color>
+    <color name="aqi_level_unhealthy_for_sensitive">#ffff7e00</color>
+    <color name="aqi_level_unhealthy">#ffff0000</color>
+    <color name="aqi_level_very_unhealthy">#ff99004c</color>
+    <color name="aqi_level_hazardous">#ff7e0023</color>
+
+    <color name="aqi_info_text_color_white">#ffffffff</color>
+    <color name="aqi_info_text_color_black">#ff000000</color>
 </resources>

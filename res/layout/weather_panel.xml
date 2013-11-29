@@ -141,4 +141,11 @@
 
     </RelativeLayout>
 
+    <include layout="@layout/aqi_info_panel"
+        android:id="@+id/aqi_info_panel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|top"
+        android:layout_below="@id/weather_image" />
+
 </RelativeLayout>

@@ -21,6 +21,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 
 import com.cyanogenmod.lockclock.R;
+import com.cyanogenmod.lockclock.misc.Preferences;
 import com.cyanogenmod.lockclock.misc.WidgetUtils;
 
 import java.text.DecimalFormat;
@@ -45,6 +46,8 @@ public class WeatherInfo {
     private int windDirection;
     private String speedUnit;
     private long timestamp;
+
+    private String aqiInfo;
 
     public WeatherInfo(Context context, String id,
             String city, String fdate, String condition, int conditionCode,
@@ -178,6 +181,10 @@ public class WeatherInfo {
         builder.append(getFormattedWindSpeed());
         builder.append(" at ");
         builder.append(getWindDirection());
+
+        builder.append("; AQI info:");
+        builder.append(getAqiInfo());
+
         return builder.toString();
     }
 
@@ -197,6 +204,11 @@ public class WeatherInfo {
         builder.append(windDirection).append('|');
         builder.append(speedUnit).append('|');
         builder.append(timestamp);
+
+        if (aqiInfo != null) {
+            builder.append('|').append(aqiInfo);
+        }
+
         return builder.toString();
     }
 
@@ -206,7 +218,7 @@ public class WeatherInfo {
         }
 
         String[] parts = input.split("\\|");
-        if (parts == null || parts.length != 14) {
+        if (parts == null || (parts.length != 14 && parts.length != 15)) {
             return null;
         }
 
@@ -227,10 +239,115 @@ public class WeatherInfo {
             return null;
         }
 
-        return new WeatherInfo(context,
+        WeatherInfo info = new WeatherInfo(context,
                 /* id */ parts[0], /* city */ parts[1], /* date */ parts[2],
                 /* condition */ parts[3], conditionCode, temperature, low, high,
                 /* tempUnit */ parts[8], humidity, wind, windDirection,
                 /* speedUnit */ parts[12], timestamp);
+
+        if (parts.length == 15) {
+            info.setAqiInfo(parts[14]);
+        }
+
+        return info;
+    }
+
+    // text format example:
+    // 11-27-2013 09:00; PM2.5; 99.0; 173; Unhealthy (at 24-hour exposure at this level)
+    public static String parseAqiInfo(String text) {
+        if (text == null) {
+            return null;
+        }
+
+        String[] segments = text.split(";");
+        if (segments.length != 5) {
+            return null;
+        }
+
+        StringBuilder builder = new StringBuilder();
+
+        // I know the date, only need time
+        String[] timeSegments = segments[0].split("\\s");
+        if (timeSegments.length == 2) {
+            builder.append(timeSegments[1]);
+        } else {
+            // builder.append(segments[0]);
+            return null; // I don't care about 24hr avg
+        }
+
+        builder.append(";").append(segments[1]);
+        builder.append(":").append(segments[2].trim());
+        builder.append("; AQI:").append(segments[3].trim());
+
+        int index = segments[4].lastIndexOf('(');
+        if (index > 0) {
+            builder.append(";").append(segments[4].substring(0, index - 1));
+        } else {
+            builder.append(";").append(segments[4]);
+        }
+
+        return builder.toString();
+    }
+
+    public int[] getAqiLevelColors() {
+        int[] colors = new int[2];
+        colors[0] = Preferences.weatherFontColor(mContext);
+        colors[1] = 0;
+
+        if (aqiInfo == null) {
+            return colors;
+        }
+
+        String[] segments = aqiInfo.split(";");
+        if (segments.length != 4) {
+            return colors;
+        }
+
+        String[] aqiSegments = segments[2].split(":");
+        if (aqiSegments.length != 2) {
+            return colors;
+        }
+
+        int aqi = -1;
+        try {
+            aqi = Integer.parseInt(aqiSegments[1]);
+        } catch(NumberFormatException e) {
+            aqi = -1;
+        }
+
+        if (-1 == aqi) {
+            return colors;
+        }
+
+        // refer to http://www.airnow.gov/index.cfm?action=aqibasics.aqi
+        if (aqi >= 0 && aqi <= 50) {
+            colors[0] = mContext.getResources().getColor(R.color.aqi_info_text_color_black);
+            colors[1] = mContext.getResources().getColor(R.color.aqi_level_good);
+        } else if (aqi >= 51 && aqi <= 100) {
+            colors[0] = mContext.getResources().getColor(R.color.aqi_info_text_color_black);
+            colors[1] = mContext.getResources().getColor(R.color.aqi_level_moderate);
+        } else if (aqi >= 101 && aqi <= 150) {
+            colors[0] = mContext.getResources().getColor(R.color.aqi_info_text_color_white);
+            colors[1] = mContext.getResources().getColor(R.color.aqi_level_unhealthy_for_sensitive);
+        } else if (aqi >= 151 && aqi <= 200) {
+            colors[0] = mContext.getResources().getColor(R.color.aqi_info_text_color_white);
+            colors[1] = mContext.getResources().getColor(R.color.aqi_level_unhealthy);
+        } else if (aqi >= 201 && aqi <= 300) {
+            colors[0] = mContext.getResources().getColor(R.color.aqi_info_text_color_white);
+            colors[1] = mContext.getResources().getColor(R.color.aqi_level_very_unhealthy);
+        } else if (aqi >= 301 && aqi <= 500) {
+            colors[0] = mContext.getResources().getColor(R.color.aqi_info_text_color_white);
+            colors[1] = mContext.getResources().getColor(R.color.aqi_level_hazardous);
+        }
+
+        return colors;
+    }
+
+    public String getAqiInfo() {
+        return aqiInfo;
+    }
+
+    public void setAqiInfo(String aqiInfo) {
+        this.aqiInfo = aqiInfo;
     }
 }

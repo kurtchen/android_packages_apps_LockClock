@@ -1,0 +1,19 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/aqi_info_panel"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="?android:attr/selectableItemBackground" >
+    <TextView
+        android:id="@+id/aqi_info"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:ellipsize="marquee"
+        android:textSize="10sp"
+        android:textColor="?android:attr/textColorPrimary"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:layout_marginTop="5dip"
+        style="@style/label_shadow" />
+</RelativeLayout>
