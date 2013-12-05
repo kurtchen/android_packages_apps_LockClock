@@ -254,6 +254,7 @@ public class WeatherInfo {
 
     // text format example:
     // 11-27-2013 09:00; PM2.5; 99.0; 173; Unhealthy (at 24-hour exposure at this level)
+    // 12-04-2013 12:00 to 12-05-2013 11:59; PM2.5 24hr avg; 149.2; 199; Unhealthy
     public static String parseAqiInfo(String text) {
         if (text == null) {
             return null;
@@ -270,12 +271,19 @@ public class WeatherInfo {
         String[] timeSegments = segments[0].split("\\s");
         if (timeSegments.length == 2) {
             builder.append(timeSegments[1]);
-        } else {
-            // builder.append(segments[0]);
-            return null; // I don't care about 24hr avg
+        } else if (timeSegments.length == 5) { // 24hr avg
+            builder.append("24hr avg");
+        } else { // let's know the change as early as possible
+            builder.append(segments[0]);
         }
 
-        builder.append(";").append(segments[1]);
+        String[] pm25Segments = segments[1].trim().split("\\s");
+        if (pm25Segments.length == 3) { // 24hr avg
+            builder.append("; ").append(pm25Segments[0]);
+        } else {
+            builder.append(";").append(segments[1]);
+        }
+
         builder.append(":").append(segments[2].trim());
         builder.append("; AQI:").append(segments[3].trim());
 
