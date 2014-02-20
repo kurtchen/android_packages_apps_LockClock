@@ -401,7 +401,9 @@ public class WeatherUpdateService extends Service {
         WeatherLocationListener.cancel(context);
     }
 
-    private static final String[] SUPPORTED_AQI_LOCATIONS = new String[] {"shanghai", "beijing", "chengdu", "guangzhou"};
+    private static final String[] SUPPORTED_AQI_LOCATIONS = new String[] {"shanghai", "beijing", "chengdu", "guangzhou",
+                                                                          "上海市", "北京市", "成都市", "广州市",
+                                                                          "上海", "北京", "成都", "广州"};
     private static final String[] TWITTER_SCREEN_NAMES = new String[] {"CGShanghaiAir", "BeijingAir", "CGChengduAir", "Guangzhou_Air"};
     private static final String TWITTER_PROXY_URL = "http://kurtchen.com/lab/aqi/?user=";
     private void addAqiInfo(WeatherInfo info) {
@@ -419,7 +421,7 @@ public class WeatherUpdateService extends Service {
         String twitter = null;
         for (int i = 0; i < SUPPORTED_AQI_LOCATIONS.length; i++) {
             if (SUPPORTED_AQI_LOCATIONS[i].equalsIgnoreCase(cityName)) {
-                twitter = TWITTER_SCREEN_NAMES[i];
+                twitter = TWITTER_SCREEN_NAMES[i % TWITTER_SCREEN_NAMES.length];
                 break;
             }
         }
